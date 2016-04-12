@@ -53,10 +53,8 @@ Or, embed in some other slack integration of yours:
     return fmt.Errorf("Failed to create pubsub client: %s", err)
   }
   s := slackgw.New()
-  s.RTMHandler = gcp.NewPubsubForwarder(pubsubsvc, topic, takosan.MessageEvent)
+  s.StartSlack(token)
+  s.StartRTM(gcp.NewPubsubForwarder(pubsubsvc, topic, takosan.MessageEvent))
 
-  if err := s.StartSlack(token); err != nil {
-    return fmt.Errorf("Failed to start slack client: %s", err)
-  }
   // other initializations follow...
 ```
