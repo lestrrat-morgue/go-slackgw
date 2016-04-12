@@ -5,6 +5,8 @@ install:
   - mv linux-amd64/glide .
   - rm -rf linux-amd64
   - ./glide install
+script:
+  - go test -v $(./glide nv)
 go:
   - 1.6
   - tip
