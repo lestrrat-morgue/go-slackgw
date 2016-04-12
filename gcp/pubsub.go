@@ -293,7 +293,7 @@ func (f *PubsubForwarder) loop() {
 		buf = buf[:0]
 
 		// TODO: handle errors
-		res, err := svc.Projects.Topics.Publish(topic, &pubsub.PublishRequest{Messages: msgs}).Do()
+		_, err := svc.Projects.Topics.Publish(topic, &pubsub.PublishRequest{Messages: msgs}).Do()
 		if err != nil {
 			if pdebug.Enabled {
 				pdebug.Printf("%s", err)

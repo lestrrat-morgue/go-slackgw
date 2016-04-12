@@ -26,7 +26,6 @@ func (s *Server) handleRTM() {
 	for loop := true; loop; {
 		select {
 		case ev := <-rtm.IncomingEvents:
-			pdebug.Printf("Incoming!")
 			if err := hdl.Handle(&RTMCtx{RTM: rtm, Event: ev}); err != nil {
 				if pdebug.Enabled {
 					pdebug.Printf("SlackRTMHandler: %s", err)

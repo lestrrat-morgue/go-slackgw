@@ -122,6 +122,11 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) watchOutgoingMessages() {
+	if pdebug.Enabled {
+		pdebug.Printf("starting watchOutgoingMessages...")
+		defer pdebug.Printf("Bailing out of watchOutgoingMessages")
+	}
+
 	done := s.done
 	if done == nil {
 		return
@@ -149,6 +154,11 @@ func (s *Server) httpWelcome(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) httpPostMessage(w http.ResponseWriter, r *http.Request) {
+	if pdebug.Enabled {
+		pdebug.Printf("http: posting new message...")
+		defer pdebug.Printf("done posting new message")
+	}
+
 	msg, err := s.extractMessage(r)
 	if err != nil {
 		http.Error(w, "Failed to parse request: "+err.Error(), http.StatusInternalServerError)
