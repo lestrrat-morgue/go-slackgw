@@ -292,14 +292,13 @@ func (f *PubsubForwarder) loop() {
 		}
 		buf = buf[:0]
 
-		pdebug.Printf("msgs = %#v", msgs)
-
 		// TODO: handle errors
 		res, err := svc.Projects.Topics.Publish(topic, &pubsub.PublishRequest{Messages: msgs}).Do()
 		if err != nil {
-			pdebug.Printf("%s", err)
+			if pdebug.Enabled {
+				pdebug.Printf("%s", err)
+			}
 		}
-		pdebug.Printf("%#v", res)
 		msgs = msgs[:0]
 	}
 }
