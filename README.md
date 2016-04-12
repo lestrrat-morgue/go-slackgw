@@ -54,7 +54,7 @@ Or, embed in some other slack integration of yours:
   }
   s := slackgw.New()
   s.StartSlack(token)
-  s.StartRTM(gcp.NewPubsubForwarder(pubsubsvc, topic, takosan.MessageEvent))
+  s.StartRTM(gcp.NewPubsubForwarder(pubsubsvc, topic, slackgw.MessageEvent))
 
   // other initializations follow...
 ```
