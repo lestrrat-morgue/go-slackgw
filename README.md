@@ -21,7 +21,7 @@ slackgw \
 Then send a POST message:
 
 ```
-curl -F "channel=#general" -F "message=Hello, World!" http://127.0.0.1:4979/post
+curl -XPOST http://slackgw:4979/post -d "channel=#updates&message=test" 
 ```
 
 This is great for your organization/company wide monitoring tools and such, especially when you have lots of tools that may want to post messages to slack, and you are too lazy creating tokens for each bot you have.
