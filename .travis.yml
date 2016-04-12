@@ -1,5 +1,10 @@
 language: go
 sudo: false
+install:
+  - wget -q -O - https://github.com/Masterminds/glide/releases/download/0.10.2/glide-0.10.2-linux-amd64.tar.gz | tar zxf -
+  - mv linux-amd64/glide .
+  - rm -rf linux-amd64
+  - ./glide install
 go:
-    - 1.6
-    - tip
+  - 1.6
+  - tip
