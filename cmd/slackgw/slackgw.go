@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -15,6 +16,28 @@ import (
 	"github.com/lestrrat/go-slackgw/gcp"
 )
 
+type eventList []int64
+
+func (l eventList) String() string {
+	buf := bytes.Buffer{}
+	for i, v := range l {
+		buf.WriteString(slackgw.MaskToEventName(v))
+		if i != len(l)-1 {
+			buf.WriteByte(',')
+		}
+	}
+	return buf.String()
+}
+
+func (l *eventList) Set(v string) error {
+	i := slackgw.EventNameToMask(v)
+	if i == -1 {
+		return fmt.Errorf("unknown event '%s'", v)
+	}
+	*l = append(*l, i)
+	return nil
+}
+
 func main() {
 	os.Exit(_main())
 }
@@ -28,6 +51,7 @@ func _main() int {
 	var icon string
 	var rtm string
 	var server bool
+	var events eventList
 
 	flag.StringVar(&listen, "listen", "127.0.0.1:4979", "listen address for HTTP interface")
 	flag.StringVar(&token, "token", "", "Slack bot token")
@@ -37,6 +61,7 @@ func _main() int {
 	flag.StringVar(&icon, "icon", "https://raw.githubusercontent.com/kentaro/slackgw/master/slackgw.jpg", "icon for slackgw")
 	flag.StringVar(&rtm, "rtm", "", "RTM handler to enable (e.g. 'gpubsub-forward')")
 	flag.BoolVar(&server, "server", true, "Turn on/off HTTP server")
+	flag.Var(&events, "event", "event(s) to forward")
 	flag.Parse()
 
 	s := slackgw.New()
@@ -88,7 +113,8 @@ func _main() int {
 			fmt.Printf("Failed to create pubsub client: %s\n", err)
 			return 1
 		}
-		s.StartRTM(gcp.NewPubsubForwarder(pubsubsvc, topic, slackgw.MessageEvent))
+
+		s.StartRTM(gcp.NewPubsubForwarder(pubsubsvc, topic, []int64(events)...))
 	}
 
 	// Wait till we're killed, or something goes wrong

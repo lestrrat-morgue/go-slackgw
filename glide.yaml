@@ -1,0 +1,13 @@
+package: github.com/lestrrat/go-slackgw
+import:
+- package: github.com/lestrrat/go-pdebug
+- package: github.com/nlopes/slack
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: golang.org/x/oauth2
+  subpackages:
+  - google
+- package: google.golang.org/api
+  subpackages:
+  - pubsub/v1

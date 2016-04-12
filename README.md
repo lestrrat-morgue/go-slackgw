@@ -35,7 +35,7 @@ Do NOT open this up for the wider internet.
 ```
 slackgw \
     -rtm=gpubsub-forward \
-    -events=MessageEvent \
+    -event=MessageEvent \
     -topic=projects/:project_id:/topics/:topic: \
     -token=/path/to/tokenfile
 ```

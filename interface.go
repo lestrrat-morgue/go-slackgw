@@ -7,15 +7,35 @@ import (
 )
 
 const (
-	AccountsChangedEvent int32 = 1 << iota
+	AccountsChangedEvent int64 = 1 << (iota + 1)
+	AckErrorEvent
 	BotAddedEvent
 	BotChangedEvent
+	ChannelCreatedEvent
+	ChannelHistoryChangedEvent
+	ChannelInfoEvent
+	ChannelJoinedEvent
+	ChannelRenameEvent
 	CommandsChangedEvent
+	ConnectedEvent
+	ConnectingEvent
+	ConnectionErrorEvent
+	DNDUpdatedEvent
+	DisconnectedEvent
 	EmailDomainChangedEvent
 	EmojiChangedEvent
+	FileCommentAddedEvent
+	FileCommentDeletedEvent
+	FileCommentEditedEvent
+	GroupCreatedEvent
+	GroupRenameEvent
 	HelloEvent
+	IMCreatedEvent
+	InvalidAuthEvent
 	ManualPresenceChangeEvent
 	MessageEvent
+	MessageTooLongEvent
+	OutgoingErrorEvent
 	PinAddedEvent
 	PinRemovedEvent
 	PrefChangeEvent
@@ -30,8 +50,10 @@ const (
 	TeamMigrationStartedEvent
 	TeamPrefChangeEvent
 	TeamRenameEvent
+	UnmarshallingErrorEvent
 	UserChangeEvent
 	UserTypingEvent
+	MaxEvent
 )
 
 type SlackClient interface {

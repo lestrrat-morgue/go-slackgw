@@ -19,7 +19,7 @@ import (
 // specified events
 type PubsubForwarder struct {
 	initonce sync.Once
-	mask     int32 // 25 events
+	mask     int64 // 25 events
 	pubch    chan slack.RTMEvent
 	svc      *pubsub.Service
 	topic    string
@@ -39,8 +39,8 @@ func init() {
 //		return err
 //	}
 //	NewPubsubForwarder(pubsubsvc, ....)
-func NewPubsubForwarder(svc *pubsub.Service, topic string, events ...int32) slackgw.SlackRTMHandler {
-	var mask int32
+func NewPubsubForwarder(svc *pubsub.Service, topic string, events ...int64) slackgw.SlackRTMHandler {
+	var mask int64
 	for _, ev := range events {
 		mask |= ev
 	}
@@ -71,6 +71,10 @@ func (f *PubsubForwarder) Handle(ctx *slackgw.RTMCtx) error {
 		if (mask & slackgw.AccountsChangedEvent) == 0 {
 			return nil
 		}
+	case *slack.AckErrorEvent:
+		if (mask & slackgw.AckErrorEvent) == 0 {
+			return nil
+		}
 	case *slack.BotAddedEvent:
 		if (mask & slackgw.BotAddedEvent) == 0 {
 			return nil
@@ -79,8 +83,48 @@ func (f *PubsubForwarder) Handle(ctx *slackgw.RTMCtx) error {
 		if (mask & slackgw.BotChangedEvent) == 0 {
 			return nil
 		}
+	case *slack.ChannelCreatedEvent:
+		if (mask & slackgw.ChannelCreatedEvent) == 0 {
+			return nil
+		}
+	case *slack.ChannelHistoryChangedEvent:
+		if (mask & slackgw.ChannelHistoryChangedEvent) == 0 {
+			return nil
+		}
+	case *slack.ChannelInfoEvent:
+		if (mask & slackgw.ChannelInfoEvent) == 0 {
+			return nil
+		}
+	case *slack.ChannelJoinedEvent:
+		if (mask & slackgw.ChannelJoinedEvent) == 0 {
+			return nil
+		}
+	case *slack.ChannelRenameEvent:
+		if (mask & slackgw.ChannelRenameEvent) == 0 {
+			return nil
+		}
 	case *slack.CommandsChangedEvent:
 		if (mask & slackgw.CommandsChangedEvent) == 0 {
+			return nil
+		}
+	case *slack.ConnectedEvent:
+		if (mask & slackgw.ConnectedEvent) == 0 {
+			return nil
+		}
+	case *slack.ConnectingEvent:
+		if (mask & slackgw.ConnectingEvent) == 0 {
+			return nil
+		}
+	case *slack.ConnectionErrorEvent:
+		if (mask & slackgw.ConnectionErrorEvent) == 0 {
+			return nil
+		}
+	case *slack.DNDUpdatedEvent:
+		if (mask & slackgw.DNDUpdatedEvent) == 0 {
+			return nil
+		}
+	case *slack.DisconnectedEvent:
+		if (mask & slackgw.DisconnectedEvent) == 0 {
 			return nil
 		}
 	case *slack.EmailDomainChangedEvent:
@@ -91,8 +135,36 @@ func (f *PubsubForwarder) Handle(ctx *slackgw.RTMCtx) error {
 		if (mask & slackgw.EmojiChangedEvent) == 0 {
 			return nil
 		}
+	case *slack.FileCommentAddedEvent:
+		if (mask & slackgw.FileCommentAddedEvent) == 0 {
+			return nil
+		}
+	case *slack.FileCommentDeletedEvent:
+		if (mask & slackgw.FileCommentDeletedEvent) == 0 {
+			return nil
+		}
+	case *slack.FileCommentEditedEvent:
+		if (mask & slackgw.FileCommentEditedEvent) == 0 {
+			return nil
+		}
+	case *slack.GroupCreatedEvent:
+		if (mask & slackgw.GroupCreatedEvent) == 0 {
+			return nil
+		}
+	case *slack.GroupRenameEvent:
+		if (mask & slackgw.GroupRenameEvent) == 0 {
+			return nil
+		}
 	case *slack.HelloEvent:
 		if (mask & slackgw.HelloEvent) == 0 {
+			return nil
+		}
+	case *slack.IMCreatedEvent:
+		if (mask & slackgw.IMCreatedEvent) == 0 {
+			return nil
+		}
+	case *slack.InvalidAuthEvent:
+		if (mask & slackgw.InvalidAuthEvent) == 0 {
 			return nil
 		}
 	case *slack.ManualPresenceChangeEvent:
@@ -103,27 +175,85 @@ func (f *PubsubForwarder) Handle(ctx *slackgw.RTMCtx) error {
 		if (mask & slackgw.MessageEvent) == 0 {
 			return nil
 		}
+	case *slack.MessageTooLongEvent:
+		if (mask & slackgw.MessageTooLongEvent) == 0 {
+			return nil
+		}
+	case *slack.OutgoingErrorEvent:
+		if (mask & slackgw.OutgoingErrorEvent) == 0 {
+			return nil
+		}
+	case *slack.PinAddedEvent:
+		if (mask & slackgw.PinAddedEvent) == 0 {
+			return nil
+		}
+	case *slack.PinRemovedEvent:
+		if (mask & slackgw.PinRemovedEvent) == 0 {
+			return nil
+		}
+	case *slack.PrefChangeEvent:
+		if (mask & slackgw.PrefChangeEvent) == 0 {
+			return nil
+		}
+	case *slack.PresenceChangeEvent:
+		if (mask & slackgw.PresenceChangeEvent) == 0 {
+			return nil
+		}
+	case *slack.ReactionAddedEvent:
+		if (mask & slackgw.ReactionAddedEvent) == 0 {
+			return nil
+		}
+	case *slack.ReactionRemovedEvent:
+		if (mask & slackgw.ReactionRemovedEvent) == 0 {
+			return nil
+		}
+	case *slack.ReconnectUrlEvent:
+		if (mask & slackgw.ReconnectUrlEvent) == 0 {
+			return nil
+		}
+	case *slack.StarAddedEvent:
+		if (mask & slackgw.StarAddedEvent) == 0 {
+			return nil
+		}
+	case *slack.StarRemovedEvent:
+		if (mask & slackgw.StarRemovedEvent) == 0 {
+			return nil
+		}
+	case *slack.TeamDomainChangeEvent:
+		if (mask & slackgw.TeamDomainChangeEvent) == 0 {
+			return nil
+		}
+	case *slack.TeamJoinEvent:
+		if (mask & slackgw.TeamJoinEvent) == 0 {
+			return nil
+		}
+	case *slack.TeamMigrationStartedEvent:
+		if (mask & slackgw.TeamMigrationStartedEvent) == 0 {
+			return nil
+		}
+	case *slack.TeamPrefChangeEvent:
+		if (mask & slackgw.TeamPrefChangeEvent) == 0 {
+			return nil
+		}
+	case *slack.TeamRenameEvent:
+		if (mask & slackgw.TeamRenameEvent) == 0 {
+			return nil
+		}
+	case *slack.UnmarshallingErrorEvent:
+		if (mask & slackgw.UnmarshallingErrorEvent) == 0 {
+			return nil
+		}
+	case *slack.UserChangeEvent:
+		if (mask & slackgw.UserChangeEvent) == 0 {
+			return nil
+		}
+	case *slack.UserTypingEvent:
+		if (mask & slackgw.UserTypingEvent) == 0 {
+			return nil
+		}
 	default:
 		return nil
 	}
-	/*
-	*slack.PinAddedEvent
-	*slack.PinRemovedEvent
-	*slack.PrefChangeEvent
-	*slack.PresenceChangeEvent
-	*slack.ReactionAddedEvent
-	*slack.ReactionRemovedEvent
-	*slack.ReconnectUrlEvent
-	*slack.StarAddedEvent
-	*slack.StarRemovedEvent
-	*slack.TeamDomainChangeEvent
-	*slack.TeamJoinEvent
-	*slack.TeamMigrationStartedEvent
-	*slack.TeamPrefChangeEvent
-	*slack.TeamRenameEvent
-	*slack.UserChangeEvent
-	*slack.UserTypingEvent
-	 */
 	f.pubch <- ev
 
 	return nil
