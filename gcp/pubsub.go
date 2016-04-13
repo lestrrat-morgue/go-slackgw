@@ -339,6 +339,9 @@ func (f *PubsubForwarder) loop() {
 				// Ugh. Ignore
 				continue
 			}
+			if pdebug.Enabled {
+				pdebug.Printf("Forwarding '%s'", ev.Type)
+			}
 			msgs = append(msgs, &pubsub.PubsubMessage{Data: b64enc.EncodeToString(encbuf.Bytes())})
 		}
 		buf = buf[:0]
