@@ -49,7 +49,6 @@ func NewPubsubForwarder(svc *pubsub.Service, topic string, events ...int64) *Pub
 		mask |= ev
 	}
 
-	pdebug.Printf("mask = %d", mask)
 	return &PubsubForwarder{
 		mask:  mask,
 		pubch: make(chan slack.RTMEvent),
@@ -335,7 +334,9 @@ func (f *PubsubForwarder) loop() {
 		for _, ev := range buf {
 			encbuf.Reset()
 			if err := enc.Encode(ev); err != nil {
-				pdebug.Printf("ERROR: %s", err)
+				if pdebug.Enabled {
+					pdebug.Printf("ERROR: %s", err)
+				}
 				// Ugh. Ignore
 				continue
 			}
