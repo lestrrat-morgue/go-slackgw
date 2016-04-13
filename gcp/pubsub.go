@@ -5,6 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/json"
+	"errors"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,11 +21,12 @@ import (
 // EventForwarder creates a new slackgw.SlackRTMHandler that forwards the
 // specified events
 type PubsubForwarder struct {
-	initonce sync.Once
-	mask     int64 // 25 events
-	pubch    chan slack.RTMEvent
-	svc      *pubsub.Service
-	topic    string
+	initonce          sync.Once
+	mask              int64 // 25 events
+	pubch             chan slack.RTMEvent
+	svc               *pubsub.Service
+	topic             string
+	SelfAddressedOnly bool // only accept messages that are address to this bot
 }
 
 func init() {
@@ -39,7 +43,7 @@ func init() {
 //		return err
 //	}
 //	NewPubsubForwarder(pubsubsvc, ....)
-func NewPubsubForwarder(svc *pubsub.Service, topic string, events ...int64) slackgw.SlackRTMHandler {
+func NewPubsubForwarder(svc *pubsub.Service, topic string, events ...int64) *PubsubForwarder {
 	var mask int64
 	for _, ev := range events {
 		mask |= ev
@@ -53,6 +57,36 @@ func NewPubsubForwarder(svc *pubsub.Service, topic string, events ...int64) slac
 		topic: topic,
 	}
 }
+
+type SlackLink struct {
+	Text string
+	URL  string
+}
+
+func parseSlackLink(s string) (*SlackLink, error) {
+	if len(s) == 0 || s[0] != '<' {
+		return nil, errors.New("not a link")
+	}
+	sl := &SlackLink{}
+	for i := 1; i < len(s); i++ {
+		switch s[i] {
+		case '|':
+			sl.Text = s[1:i]
+		case '>':
+			if l := len(sl.Text); l > 0 {
+				sl.URL = sl.Text
+				sl.Text = s[len(sl.Text)+2 : i]
+			} else {
+				sl.Text = s[1:i]
+			}
+			return sl, nil
+		}
+	}
+
+	return nil, errors.New("not a link")
+}
+
+var rxSplitWS = regexp.MustCompile(`\s+`)
 
 func (f *PubsubForwarder) Handle(ctx *slackgw.RTMCtx) error {
 	ev := ctx.Event
@@ -174,6 +208,23 @@ func (f *PubsubForwarder) Handle(ctx *slackgw.RTMCtx) error {
 	case *slack.MessageEvent:
 		if (mask & slackgw.MessageEvent) == 0 {
 			return nil
+		}
+
+		if f.SelfAddressedOnly {
+			d := ev.Data.(*slack.MessageEvent)
+			// Parse the first word, and make sure it's addressed to uskk
+			words := rxSplitWS.Split(strings.TrimSpace(d.Text), 2)
+			if len(words) <= 0 {
+				return nil
+			}
+
+			l, err := parseSlackLink(words[0])
+			if err != nil {
+				return nil
+			}
+			if l.Text != "@"+ctx.UserID {
+				return nil
+			}
 		}
 	case *slack.MessageTooLongEvent:
 		if (mask & slackgw.MessageTooLongEvent) == 0 {

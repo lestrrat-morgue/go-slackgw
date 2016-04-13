@@ -10,9 +10,9 @@ type SlackRTMHandler interface {
 }
 
 type RTMCtx struct {
+	UserID  string // This UserID is populated so handlers can potentially filter out messages addressed to others
 	RTM     *slack.RTM
 	Event   slack.RTMEvent
-	Message *slack.MessageEvent
 }
 
 func (s *Server) handleRTM() {
@@ -26,7 +26,7 @@ func (s *Server) handleRTM() {
 	for loop := true; loop; {
 		select {
 		case ev := <-rtm.IncomingEvents:
-			if err := hdl.Handle(&RTMCtx{RTM: rtm, Event: ev}); err != nil {
+			if err := hdl.Handle(&RTMCtx{UserID: s.slackuser, RTM: rtm, Event: ev}); err != nil {
 				if pdebug.Enabled {
 					pdebug.Printf("SlackRTMHandler: %s", err)
 				}
@@ -36,9 +36,4 @@ func (s *Server) handleRTM() {
 			loop = false
 		}
 	}
-}
-
-// Reply replies to the channel where the message came from
-func (ctx *RTMCtx) Reply(txt string) {
-	ctx.RTM.SendMessage(ctx.RTM.NewOutgoingMessage(txt, ctx.Message.Channel))
 }
