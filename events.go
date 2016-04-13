@@ -55,7 +55,7 @@ var eventNames = []string{
 func EventNameToMask(name string) int64 {
 	for i, n := range eventNames {
 		if n == name {
-			return int64(i)
+			return int64(1<<uint64(i))
 		}
 	}
 	return -1
