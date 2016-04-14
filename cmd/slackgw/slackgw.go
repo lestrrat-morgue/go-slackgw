@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"golang.org/x/net/context"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/pubsub/v1"
+
+	"google.golang.org/cloud/pubsub"
 
 	"github.com/lestrrat/go-pdebug"
 	"github.com/lestrrat/go-slackgw"
@@ -46,6 +46,7 @@ func _main() int {
 	var listen string
 	var token string
 	var tokenf string
+	var projectID string
 	var topic string
 	var name string
 	var rtm string
@@ -56,7 +57,8 @@ func _main() int {
 	flag.StringVar(&listen, "listen", "127.0.0.1:4979", "listen address for HTTP interface")
 	flag.StringVar(&token, "token", "", "Slack bot token")
 	flag.StringVar(&tokenf, "tokenfile", "", "Slack bot token file")
-	flag.StringVar(&topic, "gpubsub-forward.topic", "projects/:project_id:/topic/slackgw-forward", "topic to forward to")
+	flag.StringVar(&projectID, "gpubsub-forward.project_id", "", "Google Cloud Project ID")
+	flag.StringVar(&topic, "gpubsub-forward.topic", "slackgw-forward", "topic to forward to")
 	flag.Var(&events, "gpubsub-forward.event", "event(s) to forward")
 	flag.BoolVar(&selfaddress, "gpubsub-forward.self-addressed-only", true, "forward only if it's address to this bot")
 	flag.StringVar(&name, "name", "slackgw", "bot name")
@@ -103,18 +105,13 @@ func _main() int {
 	switch rtm {
 	case "gpubsub-forward":
 		hctx := context.Background()
-		httpcl, err := google.DefaultClient(hctx, pubsub.PubsubScope)
+		cl, err := pubsub.NewClient(hctx, projectID)
 		if err != nil {
-			fmt.Printf("Failed to create default oauth client: %s\n", err)
-			return 1
-		}
-		pubsubsvc, err := pubsub.New(httpcl)
-		if err != nil {
-			fmt.Printf("Failed to create pubsub client: %s\n", err)
+			fmt.Printf("Failed to create pubsub client: %s", err)
 			return 1
 		}
 
-		fwd := gcp.NewPubsubForwarder(pubsubsvc, topic, []int64(events)...)
+		fwd := gcp.NewPubsubForwarder(cl, topic, []int64(events)...)
 		fwd.SelfAddressedOnly = selfaddress
 		s.StartRTM(fwd)
 	}

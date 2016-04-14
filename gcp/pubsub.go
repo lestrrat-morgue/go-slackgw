@@ -2,7 +2,6 @@ package gcp
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/gob"
 	"encoding/json"
 	"errors"
@@ -11,11 +10,13 @@ import (
 	"sync"
 	"time"
 
+	"golang.org/x/net/context"
+
 	"github.com/lestrrat/go-pdebug"
 	"github.com/lestrrat/go-slackgw"
 	"github.com/nlopes/slack"
 
-	"google.golang.org/api/pubsub/v1"
+	"google.golang.org/cloud/pubsub"
 )
 
 // EventForwarder creates a new slackgw.SlackRTMHandler that forwards the
@@ -23,8 +24,8 @@ import (
 type PubsubForwarder struct {
 	initonce          sync.Once
 	mask              int64 // 25 events
+	client            *pubsub.Client
 	pubch             chan slack.RTMEvent
-	svc               *pubsub.Service
 	topic             string
 	SelfAddressedOnly bool // only accept messages that are address to this bot
 }
@@ -34,26 +35,22 @@ func init() {
 }
 
 //	hctx := context.Background()
-//	httpcl, err := google.DefaultClient(hctx, pubsub.PubsubScope)
+//	cl, err := pubsub.NewClient(hctx, projectID)
 //	if err != nil {
 //		return err
 //	}
-//	pubsubsvc, err := pubsub.New(httpcl)
-//	if err != nil {
-//		return err
-//	}
-//	NewPubsubForwarder(pubsubsvc, ....)
-func NewPubsubForwarder(svc *pubsub.Service, topic string, events ...int64) *PubsubForwarder {
+//	NewPubsubForwarder(cl, ....)
+func NewPubsubForwarder(cl *pubsub.Client, topic string, events ...int64) *PubsubForwarder {
 	var mask int64
 	for _, ev := range events {
 		mask |= ev
 	}
 
 	return &PubsubForwarder{
-		mask:  mask,
-		pubch: make(chan slack.RTMEvent),
-		svc:   svc,
-		topic: topic,
+		mask:   mask,
+		pubch:  make(chan slack.RTMEvent),
+		client: cl,
+		topic:  topic,
 	}
 }
 
@@ -310,17 +307,20 @@ func (f *PubsubForwarder) Handle(ctx *slackgw.RTMCtx) error {
 }
 
 func (f *PubsubForwarder) loop() {
-	svc := f.svc
-	topic := f.topic
-	buf := make([]slack.RTMEvent, 0, 255)
-	msgs := make([]*pubsub.PubsubMessage, 0, 255)
-	flusht := time.Tick(2 * time.Second)
-	b64enc := base64.RawURLEncoding
+	if pdebug.Enabled {
+		pdebug.Printf("Start gcp.PubsubForwarder.loop()")
+		defer pdebug.Printf("Bailing out of gcp.PubsubForwarder.loop()")
+	}
+
+	flusht := time.Tick(time.Second)
+	topic := f.client.Topic(f.topic)
+	buf := make([]slack.RTMEvent, 0, pubsub.MaxPublishBatchSize)
+	msgs := make([]*pubsub.Message, 0, pubsub.MaxPublishBatchSize)
 	for {
 		select {
 		case ev := <-f.pubch:
 			buf = append(buf, ev)
-			if len(buf) <= 255 {
+			if len(buf) <= pubsub.MaxPublishBatchSize {
 				continue
 			}
 		case <-flusht:
@@ -329,10 +329,14 @@ func (f *PubsubForwarder) loop() {
 			}
 		}
 
-		encbuf := bytes.Buffer{}
-		enc := json.NewEncoder(&encbuf)
+		if pdebug.Enabled {
+			pdebug.Printf("Processing %d events...", len(buf))
+		}
+
+		jsbuf := bytes.Buffer{}
+		enc := json.NewEncoder(&jsbuf)
 		for _, ev := range buf {
-			encbuf.Reset()
+			jsbuf.Reset()
 			if err := enc.Encode(ev); err != nil {
 				if pdebug.Enabled {
 					pdebug.Printf("ERROR: %s", err)
@@ -340,18 +344,22 @@ func (f *PubsubForwarder) loop() {
 				// Ugh. Ignore
 				continue
 			}
-			if pdebug.Enabled {
-				pdebug.Printf("Forwarding '%s'", ev.Type)
-			}
-			msgs = append(msgs, &pubsub.PubsubMessage{Data: b64enc.EncodeToString(encbuf.Bytes())})
+			msgs = append(msgs, &pubsub.Message{Data: jsbuf.Bytes()})
 		}
 		buf = buf[:0]
 
 		// TODO: handle errors
-		_, err := svc.Projects.Topics.Publish(topic, &pubsub.PublishRequest{Messages: msgs}).Do()
-		if err != nil {
-			if pdebug.Enabled {
+		if pdebug.Enabled {
+			pdebug.Printf("Forwarding %d messages to %s", len(msgs), topic.Name())
+		}
+
+		res, err := topic.Publish(context.Background(), msgs...)
+		if pdebug.Enabled {
+			if err != nil {
 				pdebug.Printf("%s", err)
+			}
+			if res != nil {
+				pdebug.Printf("%#v", res)
 			}
 		}
 		msgs = msgs[:0]
