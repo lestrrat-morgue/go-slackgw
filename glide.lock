@@ -1,12 +1,12 @@
-hash: 968aebb3572af0e6e89c8f8520e777ab5f8dfddf96d17caa9b1343977673d49e
-updated: 2016-04-12T15:38:43.122334187+09:00
+hash: 650078b8a4cfdbe538f395265a71bab81e7c24e43477d94b94ba6356b8476401
+updated: 2016-04-14T13:15:48.199584824+09:00
 imports:
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
 - name: github.com/golang/protobuf
-  version: dda510ac0fd43b39770f22ac6260eb91d377bce3
+  version: f0a097ddac24fb00e07d2ac17f8671423f3ea47c
   subpackages:
   - proto
 - name: github.com/lestrrat/go-pdebug
@@ -14,11 +14,15 @@ imports:
 - name: github.com/nlopes/slack
   version: 14b5c06da227e7d8fe3e411b58ace3977df0d00d
 - name: golang.org/x/net
-  version: 589fda73dd0faec3dc59e7d7dab5b069e3fce0f9
+  version: fb93926129b8ec0056f2f458b1f519654814edf0
   subpackages:
   - context
   - websocket
   - context/ctxhttp
+  - http2
+  - trace
+  - http2/hpack
+  - internal/timeseries
 - name: golang.org/x/oauth2
   version: b0e2337fe6ec0c637fa4f123268b972f334504eb
   subpackages:
@@ -29,25 +33,40 @@ imports:
 - name: google.golang.org/api
   version: 9737cc9e103c00d06a8f3993361dec083df3d252
   subpackages:
-  - pubsub/v1
-  - gensupport
   - googleapi
+  - pubsub/v1
   - googleapi/internal/uritemplates
+  - gensupport
 - name: google.golang.org/appengine
   version: b67c870a16a2d58b3afa024461dcc51805f52e9d
   subpackages:
   - urlfetch
   - internal
+  - internal/urlfetch
   - internal/app_identity
   - internal/modules
-  - internal/urlfetch
   - internal/base
   - internal/datastore
   - internal/log
   - internal/remote_api
 - name: google.golang.org/cloud
-  version: 79ffda073da804f325135da5ff645a630a4d7625
+  version: 7b5d2677dff6d957e7f87c784b54cfaa03150c68
   subpackages:
-  - compute/metadata
+  - pubsub
   - internal
+  - internal/transport
+  - internal/opts
+  - compute/metadata
+- name: google.golang.org/grpc
+  version: 9ac074585f926c8506b6351bfdc396d2b19b1cb1
+  subpackages:
+  - credentials
+  - credentials/oauth
+  - codes
+  - grpclog
+  - internal
+  - metadata
+  - naming
+  - transport
+  - peer
 devImports: []

@@ -5,9 +5,6 @@ import:
 - package: golang.org/x/net
   subpackages:
   - context
-- package: golang.org/x/oauth2
+- package: google.golang.org/cloud
   subpackages:
-  - google
-- package: google.golang.org/api
-  subpackages:
-  - pubsub/v1
+  - pubsub
