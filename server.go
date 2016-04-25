@@ -20,7 +20,6 @@ func New() *Server {
 	s := &Server{ServeMux: mux}
 	mux.HandleFunc("/", s.httpWelcome)
 	mux.HandleFunc("/post", s.httpPostMessage)
-	s.AuthToken = os.Getenv("SLACKGW_AUTH_TOKEN")
 	s.done = make(chan struct{})
 	s.bus = make(chan *Message, 255)
 	return s

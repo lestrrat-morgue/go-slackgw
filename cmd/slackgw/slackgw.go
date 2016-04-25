@@ -46,6 +46,7 @@ func _main() int {
 	var listen string
 	var token string
 	var tokenf string
+	var authtokenf string
 	var projectID string
 	var topic string
 	var name string
@@ -57,6 +58,7 @@ func _main() int {
 	flag.StringVar(&listen, "listen", "127.0.0.1:4979", "listen address for HTTP interface")
 	flag.StringVar(&token, "token", "", "Slack bot token")
 	flag.StringVar(&tokenf, "tokenfile", "", "Slack bot token file")
+	flag.StringVar(&authtokenf, "authtokenfile", "", "File containing token used to authentication when posting")
 	flag.StringVar(&projectID, "gpubsub-forward.project_id", "", "Google Cloud Project ID")
 	flag.StringVar(&topic, "gpubsub-forward.topic", "slackgw-forward", "topic to forward to")
 	flag.Var(&events, "gpubsub-forward.event", "event(s) to forward")
@@ -94,6 +96,16 @@ func _main() int {
 
 	// Start HTTP Interface
 	if server {
+		if authtokenf != "" {
+			buf, err := ioutil.ReadFile(authtokenf)
+			if err != nil {
+				fmt.Printf("Failed to read from '%s'", authtokenf)
+				return 1
+			}
+			s.AuthToken = string(buf)
+			s.AuthHeader = "X-Slackgw-Auth"
+		}
+
 		proto := "tcp" // hardcode for now
 		if err := s.StartHTTP(proto, listen); err != nil {
 			fmt.Printf("Failed to start HTTP server: %s\n", err)
