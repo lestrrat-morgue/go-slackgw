@@ -20,6 +20,7 @@ func New() *Server {
 	s := &Server{ServeMux: mux}
 	mux.HandleFunc("/", s.httpWelcome)
 	mux.HandleFunc("/post", s.httpPostMessage)
+	s.AuthToken = os.Getenv("SLACKGW_AUTH_TOKEN")
 	s.done = make(chan struct{})
 	s.bus = make(chan *Message, 255)
 	return s
@@ -153,22 +154,46 @@ func (s *Server) httpWelcome(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Welcome"))
 }
 
+func (s *Server) Authorized(token string) bool {
+	// XXX For now we're just going to check for a single value, but
+	// we probably should think of a better auth/authz backend
+	return s.AuthToken == token
+}
+
 func (s *Server) httpPostMessage(w http.ResponseWriter, r *http.Request) {
 	if pdebug.Enabled {
 		pdebug.Printf("http: posting new message...")
 		defer pdebug.Printf("done posting new message")
 	}
 
+	// Check for authentication
+	if hdrname := s.AuthHeader; hdrname != "" {
+		if !s.Authorized(r.Header.Get(hdrname)) {
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
+	}
+
 	msg, err := s.extractMessage(r)
 	if err != nil {
+		if pdebug.Enabled {
+			pdebug.Printf("failed to extract message: %s", err)
+		}
 		http.Error(w, "Failed to parse request: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer msgPool.Put(msg)
 
+	if pdebug.Enabled {
+		pdebug.Printf("message to send: %#v", msg)
+	}
+
 	// Note: this function WILL block until we get a response from the
 	// slack server, because HTTP is... blocky.
 	if err := s.postMessage(msg); err != nil {
+		if pdebug.Enabled {
+			pdebug.Printf("failed to post message: %s", err)
+		}
 		http.Error(w, "Failed to post message: "+err.Error(), http.StatusInternalServerError)
 		return
 	}

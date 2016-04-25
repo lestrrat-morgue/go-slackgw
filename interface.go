@@ -68,6 +68,8 @@ type SlackRTMClient interface {
 
 type Server struct {
 	*http.ServeMux
+	AuthHeader string // if non empty, authorize
+	AuthToken  string // XXX temporary. do not rely on this being here
 	bus        chan *Message
 	done       chan struct{}
 	slack      SlackClient // For testing purposes, we use an interface here
