@@ -8,3 +8,4 @@ import:
 - package: google.golang.org/cloud
   subpackages:
   - pubsub
+- package: github.com/pkg/errors

@@ -2,7 +2,6 @@ package slackgw
 
 import (
 	"encoding/json"
-	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/lestrrat/go-pdebug"
 	"github.com/nlopes/slack"
+	"github.com/pkg/errors"
 )
 
 func New() *Server {
@@ -50,7 +50,7 @@ func (s *Server) StartHTTP(proto, listen string) error {
 	}
 	l, err := net.Listen(proto, listen)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to listen")
 	}
 	// Start httpd
 	go http.Serve(l, s)
@@ -66,7 +66,7 @@ func (s *Server) StartSlack(token string) error {
 	s.slack = cl
 	auth, err := s.slack.AuthTest()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Slack auth test failed")
 	}
 	s.slackuser = auth.UserID // so we know what to respond to
 
@@ -243,7 +243,7 @@ func (s *Server) extractMessage(r *http.Request) (*Message, error) {
 		case "application/json":
 			msg = msgPool.Get().(*Message)
 			if err := json.NewDecoder(r.Body).Decode(msg); err != nil {
-				return nil, err
+				return nil, errors.Wrap(err, "failed to decode JSON")
 			}
 			return msg, nil
 		case "application/x-www-form-urlencoded":
